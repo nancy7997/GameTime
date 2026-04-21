@@ -1,9 +1,320 @@
-// --- CUSTOMIZE YOUR CATEGORIES HERE ---
-const categories = [
-    "80s Rock", 
-    "Pop Divas", 
-    "Disney Hits", 
-    "Country", 
-    "90s Hip Hop", 
-    "Movie Themes"
-];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    
+    <title>Karaoke Showdown</title>
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-black: #121212;
+            --spotify-dark: #282828;
+            --text-main: #FFFFFF;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            text-align: center;
+            background-color: var(--spotify-black);
+            color: var(--text-main);
+            margin: 0;
+            padding: env(safe-area-inset-top) 20px 20px 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Stops scrolling on iPad */
+        }
+
+        /* Header & Scores */
+        h1 { color: var(--spotify-green); font-weight: 900; letter-spacing: -1px; margin: 10px 0; font-size: 2em;}
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            background-color: var(--spotify-dark);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .score-display { font-size: 1.2em; color: #b3b3b3; }
+        .score-num { font-size: 1.5em; color: white; font-weight: bold; display: block; }
+        .active-team { color: var(--spotify-green); font-weight: bold; border-bottom: 2px solid var(--spotify-green);}
+
+        /* Main Game Area (Wheel + Timer) */
+        .game-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* The Timer (Large behind the wheel) */
+        #timer {
+            font-size: 120px;
+            font-weight: 200;
+            font-variant-numeric: tabular-nums;
+            color: rgba(255,255,255,0.1); /* Very faint background */
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+
+        /* The Spinning Wheel Section */
+        #wheel-container {
+            position: relative;
+            z-index: 2;
+            width: 90vw;
+            height: 90vw;
+            max-width: 450px;
+            max-height: 450px;
+            margin-bottom: 20px;
+        }
+
+        #wheel-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid var(--spotify-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            /* Smooth spinning transition */
+            transition: transform 4s cubic-bezier(0.1, 0.7, 0.2, 1); 
+        }
+
+        /* Pointer arrow at the top */
+        #pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 40px solid var(--spotify-green);
+            z-index: 3;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
+        }
+
+        /* Small central pin */
+        #pin {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px; height: 30px;
+            background: white;
+            border-radius: 50%;
+            border: 4px solid var(--spotify-dark);
+            z-index: 4;
+        }
+
+        /* Final result text */
+        #display {
+            font-size: 1.5em;
+            font-weight: 800;
+            margin: 10px 0;
+            min-height: 1.4em;
+        }
+        .instruction { font-size: 0.8em; color: var(--spotify-green); display: block; font-weight: normal;}
+
+        /* Buttons */
+        button {
+            background-color: var(--spotify-green);
+            color: white; border: none;
+            padding: 18px 40px; font-size: 1.2em; font-weight: bold;
+            border-radius: 50px; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
+            margin-bottom: 20px;
+        }
+        button:active { transform: scale(0.97); }
+        button:disabled { background: #555; box-shadow: none; opacity: 0.5; }
+
+        /* Scoring Modal */
+        .modal {
+            display: none; position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100;
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: var(--spotify-dark); padding: 40px;
+            border-radius: 30px; width: 80%; border: 1px solid #444;
+        }
+        .modal h2 { margin-top: 0; }
+        .modal button { margin: 10px; width: 90%; }
+        .score-yes { background-color: var(--spotify-green) !important; }
+        .score-other { background-color: #f1c40f !important; color: black !important;}
+        .score-no { background-color: #e74c3c !important; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>KARAOKE SHOWDOWN</h1>
+        <div class="score-board">
+            <div id="t1" class="score-display active-team">T1: <span id="s1" class="score-num">0</span></div>
+            <div id="t2" class="score-display">T2: <span id="s2" class="score-num">0</span></div>
+        </div>
+    </header>
+
+    <div class="game-area">
+        <div id="timer">02:00</div>
+        
+        <div id="wheel-container">
+            <div id="pointer"></div>
+            <div id="pin"></div>
+            <canvas id="wheel-canvas" width="500" height="500"></canvas>
+        </div>
+
+        <div id="display">Next team ready?</div>
+        
+        <button onclick="spinWheel()" id="spinBtn">Spin Wheel</button>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2>Did they sing?</h2>
+            <button onclick="recordScore(100)" class="score-yes">YES (100 pts)</button>
+            <button onclick="recordScore(25)" class="score-other">OTHER (25 pts)</button>
+            <button onclick="recordScore(0)" class="score-no">NO (0 pts)</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CUSTOMIZE YOUR CATEGORIES HERE ---
+        // You can have 2 categories or 20! The wheel adjusts itself automatically.
+        const categories = [
+            "80s Rock", 
+            "Pop Divas", 
+            "Disney Hits", 
+            "Country", 
+            "90s Hip Hop", 
+            "Movie Themes"
+        ];
+        
+        // Custom colors for slices (repeats if you have more categories than colors)
+        const sliceColors = ['#1ed760', '#191414', '#2d2d2d', '#535353', '#b3b3b3'];
+
+        // --- GAME LOGIC (Don't touch unless you know JS!) ---
+        let currentTeam = 1, score1 = 0, score2 = 0, countdownInterval;
+        let currentRotation = 0;
+        const canvas = document.getElementById('wheel-canvas');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = canvas.width / 2;
+
+        // Draw the visual wheel based on the categories array
+        function drawWheel() {
+            const numSlices = categories.length;
+            const sliceAngle = (2 * Math.PI) / numSlices;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Reset
+            
+            for (let i = 0; i < numSlices; i++) {
+                const angle = i * sliceAngle;
+                
+                // Draw Pie Slice
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle, angle + sliceAngle);
+                ctx.closePath();
+                ctx.fillStyle = sliceColors[i % sliceColors.length];
+                ctx.fill();
+
+                // Draw Text
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = (ctx.fillStyle === '#1ed760' || ctx.fillStyle === '#ffffff') ? "black" : "white";
+                ctx.font = "bold 24px -apple-system";
+                // Adjust text padding depending on wheel size
+                ctx.fillText(categories[i], radius - 20, 10);
+                ctx.restore();
+            }
+        }
+
+        // Handle the spin animation and calculation
+        function spinWheel() {
+            const btn = document.getElementById('spinBtn');
+            btn.disabled = true;
+            btn.innerText = "Spinning...";
+            document.getElementById('display').innerText = "Hold on...";
+            document.getElementById('timer').style.color = "rgba(255,255,255,0.1)"; // Fade timer
+
+            const numSlices = categories.length;
+            const degreePerSlice = 360 / numSlices;
+            
+            // Randomly pick a slice
+            const prizeIndex = Math.floor(Math.random() * numSlices);
+            
+            // Calculate random rotation that ends on that slice under the pointer
+            // Pointer is at -90 degrees (top).
+            const stopAngle = 360 - (prizeIndex * degreePerSlice) - (degreePerSlice / 2);
+            
+            // Spin at least 5 full times, then stop on the prize
+            const extraSpins = 360 * 5;
+            currentRotation += extraSpins + stopAngle - (currentRotation % 360);
+
+            // Apply CSS rotation
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            // Wait 4 seconds (matching CSS transition) then handle result
+            setTimeout(() => {
+                const finalCategory = categories[prizeIndex];
+                document.getElementById('display').innerHTML = `Category: <strong>${finalCategory}</strong><span class="instruction">(DJ, hit Play on Spotify!)</span>`;
+                startTimer();
+            }, 4000); 
+        }
+
+        function startTimer() {
+            let time = 120;
+            document.getElementById('timer').innerText = "02:00";
+            document.getElementById('timer').style.color = "rgba(255,255,255,0.8)"; // Bring timer to front
+            
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                time--;
+                const m = Math.floor(time / 60), s = time % 60;
+                document.getElementById('timer').innerText = `0${m}:${s<10?'0':''}${s}`;
+                
+                if (time <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('modal').style.display = "flex";
+                }
+            }, 1000);
+        }
+
+        function recordScore(pts) {
+            if (currentTeam === 1) {
+                score1 += pts;
+                document.getElementById('s1').innerText = score1;
+                currentTeam = 2;
+                document.getElementById('t1').classList.remove('active-team');
+                document.getElementById('t2').classList.add('active-team');
+            } else {
+                score2 += pts;
+                document.getElementById('s2').innerText = score2;
+                currentTeam = 1;
+                document.getElementById('t2').classList.remove('active-team');
+                document.getElementById('t1').classList.add('active-team');
+            }
+            // Reset UI
+            document.getElementById('modal').style.display = "none";
+            document.getElementById('timer').innerText = "02:00";
+            document.getElementById('display').innerText = `Team ${currentTeam}, ready?`;
+            const btn = document.getElementById('spinBtn');
+            btn.disabled = false;
+            btn.innerText = "Spin Wheel";
+        }
+
+        // Initialize wheel drawing on load
+        drawWheel();
+    </script>
+</body>
+</html>
