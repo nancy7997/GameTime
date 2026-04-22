@@ -30,54 +30,53 @@
 
         h1 { color: var(--spotify-green); font-weight: 900; margin: 5px 0; font-size: 1.2em; text-transform: uppercase; }
         
-        /* Scores at top */
         .score-board {
             display: flex;
             justify-content: space-around;
             background-color: var(--spotify-dark);
             padding: 10px;
             border-radius: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #444;
         }
         .score-display { font-size: 0.85em; color: #b3b3b3; flex: 1; }
-        .team-label { font-size: 1em; color: white; font-weight: bold; display: block; }
+        .team-label { font-size: 1em; color: white; font-weight: bold; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .score-num { font-size: 1.3em; color: var(--spotify-green); font-weight: 800; }
         .active-team { border-bottom: 3px solid var(--spotify-green); background: rgba(29, 185, 84, 0.1); }
 
-        /* Timer and Button Row */
+        /* Controls Row: Timer + Spin Button */
         .controls-row {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         #timer {
-            font-size: 45px;
+            font-size: 42px;
             font-weight: 800;
             font-variant-numeric: tabular-nums;
             color: #FFFFFF;
             background: #333;
-            padding: 5px 15px;
-            border-radius: 10px;
-            min-width: 130px;
+            padding: 8px 15px;
+            border-radius: 12px;
+            min-width: 125px;
         }
 
         button#spinBtn {
             background-color: var(--spotify-green);
             color: white; border: none;
-            padding: 15px 30px; font-size: 1.1em; font-weight: bold;
-            border-radius: 10px;
+            padding: 18px 35px; font-size: 1.1em; font-weight: 900;
+            border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
-        button:disabled { background: #555; opacity: 0.5; }
+        button:disabled { background: #555; opacity: 0.5; box-shadow: none; }
 
-        /* The Wheel Area */
+        /* Wheel Area */
         .wheel-area {
             flex-grow: 1;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             position: relative;
@@ -85,10 +84,10 @@
 
         #wheel-container {
             position: relative;
-            width: 75vw;
-            height: 75vw;
-            max-width: 320px;
-            max-height: 320px;
+            width: 78vw;
+            height: 78vw;
+            max-width: 330px;
+            max-height: 330px;
         }
 
         #wheel-canvas {
@@ -103,24 +102,26 @@
             top: -15px; left: 50%;
             transform: translateX(-50%);
             width: 0; height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 30px solid white;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-top: 35px solid white;
             z-index: 10;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
         }
 
-        /* Modal Popup */
+        /* Result Modal */
         .modal {
             display: none; position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100;
+            background: rgba(0,0,0,0.95); z-index: 100;
             flex-direction: column; justify-content: center; align-items: center;
         }
         .modal-content {
             background: var(--spotify-dark); padding: 30px;
-            border-radius: 20px; width: 80%;
+            border-radius: 25px; width: 80%; border: 1px solid #444;
         }
-        .modal button { margin: 10px 0; width: 100%; padding: 18px; font-weight: bold; border-radius: 10px; border:none; font-size: 1.1em;}
+        .modal h2 { margin-top: 0; font-size: 1.4em; }
+        .modal button { margin: 10px 0; width: 100%; padding: 20px; font-weight: bold; border-radius: 15px; border:none; font-size: 1.2em;}
     </style>
 </head>
 <body>
@@ -161,7 +162,17 @@
     </div>
 
     <script>
-        const categories = ["1950s/60s/70s", "1980s", "1990s", "2000s", "2010s", "2020s", "Nancy’s Playlist"];
+        // Updated Category List
+        const categories = [
+            "1950s - 1970s", 
+            "1980s", 
+            "1990s", 
+            "2000s", 
+            "2010s", 
+            "2020s", 
+            "Nancy’s Playlist"
+        ];
+        
         const sliceColors = ['#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#42d4f4'];
 
         let team1Name = "Team 1", team2Name = "Team 2", currentTeam = 1, score1 = 0, score2 = 0, countdownInterval, currentRotation = 0;
@@ -189,18 +200,18 @@
                 ctx.rotate(i * sliceAngle + sliceAngle / 2);
                 ctx.textAlign = "right";
                 ctx.fillStyle = (i === 2) ? "black" : "white";
-                ctx.font = "bold 32px sans-serif";
+                ctx.font = "bold 34px sans-serif";
 
-                // TEXT WRAPPING LOGIC
+                // UPDATED WRAPPING LOGIC
                 let text = categories[i];
-                if (text.includes(" ")) {
+                if (text.includes(" - ")) {
+                    let parts = text.split(" - ");
+                    ctx.fillText(parts[0] + " -", radius - 40, -10);
+                    ctx.fillText(parts[1], radius - 40, 35);
+                } else if (text.includes(" ")) {
                     let parts = text.split(" ");
                     ctx.fillText(parts[0], radius - 40, -10);
-                    ctx.fillText(parts[1], radius - 40, 30);
-                } else if (text.includes("/")) {
-                    let parts = text.split("/");
-                    ctx.fillText(parts[0] + "/", radius - 40, -10);
-                    ctx.fillText(parts[1] + "/" + parts[2], radius - 40, 30);
+                    ctx.fillText(parts[1], radius - 40, 35);
                 } else {
                     ctx.fillText(text, radius - 40, 10);
                 }
@@ -215,14 +226,13 @@
             const numSlices = categories.length;
             const prizeIndex = Math.floor(Math.random() * numSlices);
             
-            // Pointer is at the top (-90 degrees)
-            // This math ensures the prize selected matches the slice at 12 o'clock
             const degreePerSlice = 360 / numSlices;
             const stopAngle = 360 - (prizeIndex * degreePerSlice) - (degreePerSlice / 2);
             
             currentRotation += (360 * 5) + stopAngle - (currentRotation % 360);
             canvas.style.transform = `rotate(${currentRotation}deg)`;
             
+            // Starts timer exactly when wheel stops
             setTimeout(() => { startTimer(); }, 4000); 
         }
 
