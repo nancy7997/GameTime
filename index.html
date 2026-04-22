@@ -28,53 +28,56 @@
             overflow: hidden; 
         }
 
-        h1 { color: var(--spotify-green); font-weight: 900; margin: 5px 0; font-size: 1.5em;}
+        h1 { color: var(--spotify-green); font-weight: 900; margin: 5px 0; font-size: 1.4em; letter-spacing: 1px;}
         
         .score-board {
             display: flex;
             justify-content: space-around;
             background-color: var(--spotify-dark);
-            padding: 10px;
+            padding: 12px;
             border-radius: 12px;
             margin-bottom: 10px;
+            border: 1px solid #444;
         }
-        .score-display { font-size: 1em; color: #b3b3b3; }
-        .score-num { font-size: 1.2em; color: white; font-weight: bold; display: block; }
-        .active-team { color: var(--spotify-green); border-bottom: 2px solid var(--spotify-green);}
+        .score-display { font-size: 0.9em; color: #b3b3b3; flex: 1; }
+        .team-label { font-size: 1.1em; color: white; font-weight: bold; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .score-num { font-size: 1.4em; color: var(--spotify-green); font-weight: 800; }
+        .active-team { border-bottom: 3px solid var(--spotify-green); background: rgba(29, 185, 84, 0.1); border-radius: 8px 8px 0 0; }
 
-        /* Main Game Area */
         .game-area {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Spreads elements out */
+            justify-content: space-between;
             align-items: center;
-            padding-bottom: 20px;
+            padding-bottom: 30px;
         }
 
         #timer {
-            font-size: 60px; /* Smaller, clearer timer */
+            font-size: 55px;
             font-weight: 200;
             font-variant-numeric: tabular-nums;
-            color: var(--spotify-green);
-            margin-top: 10px;
+            color: #FFFFFF;
+            background: rgba(255,255,255,0.05);
+            padding: 5px 20px;
+            border-radius: 50px;
         }
 
-        /* SHRUNK THE WHEEL HERE */
         #wheel-container {
             position: relative;
-            width: 65vw; /* Smaller width */
-            height: 65vw;
-            max-width: 300px; /* Caps the size for larger iPads */
-            max-height: 300px;
-            margin: 10px auto;
+            width: 70vw;
+            height: 70vw;
+            max-width: 280px;
+            max-height: 280px;
+            margin: 5px auto;
         }
 
         #wheel-canvas {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 5px solid var(--spotify-dark);
+            border: 6px solid #FFF;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
             transition: transform 4s cubic-bezier(0.1, 0.7, 0.2, 1); 
         }
 
@@ -84,58 +87,59 @@
             left: 50%;
             transform: translateX(-50%);
             width: 0; height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 30px solid white;
-            z-index: 3;
-        }
-
-        #pin {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px; height: 20px;
-            background: white;
-            border-radius: 50%;
-            z-index: 4;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-top: 35px solid white;
+            z-index: 10;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8));
         }
 
         #display {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin: 10px 0;
+            font-size: 1.4em;
+            font-weight: 800;
+            color: var(--spotify-green);
             min-height: 1.5em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
         button {
             background-color: var(--spotify-green);
             color: white; border: none;
-            padding: 15px 50px; font-size: 1.1em; font-weight: bold;
+            padding: 15px 60px; font-size: 1.2em; font-weight: bold;
             border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            text-transform: uppercase;
         }
+        button:disabled { background: #444; color: #888; box-shadow: none; }
 
-        /* Popup */
+        /* Popups */
         .modal {
             display: none; position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 100;
+            background: rgba(0,0,0,0.9); z-index: 100;
             flex-direction: column; justify-content: center; align-items: center;
         }
         .modal-content {
             background: var(--spotify-dark); padding: 30px;
-            border-radius: 20px; width: 85%;
+            border-radius: 20px; width: 80%; text-align: center;
         }
-        .modal button { margin: 8px 0; width: 100%; }
+        .modal h2 { margin-top: 0; font-size: 1.5em; }
+        .modal button { margin: 10px 0; width: 100%; padding: 15px; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>KARAOKE</h1>
+        <h1>KARAOKE PARTY</h1>
         <div class="score-board">
-            <div id="t1" class="score-display active-team">T1: <span id="s1" class="score-num">0</span></div>
-            <div id="t2" class="score-display">T2: <span id="s2" class="score-num">0</span></div>
+            <div id="t1-box" class="score-display active-team">
+                <span id="t1-name" class="team-label">Team 1</span>
+                <span id="s1" class="score-num">0</span>
+            </div>
+            <div id="t2-box" class="score-display">
+                <span id="t2-name" class="team-label">Team 2</span>
+                <span id="s2" class="score-num">0</span>
+            </div>
         </div>
     </header>
 
@@ -144,18 +148,17 @@
         
         <div id="wheel-container">
             <div id="pointer"></div>
-            <div id="pin"></div>
-            <canvas id="wheel-canvas" width="500" height="500"></canvas>
+            <canvas id="wheel-canvas" width="600" height="600"></canvas>
         </div>
 
-        <div id="display">Next team ready?</div>
+        <div id="display">Spin for your decade!</div>
         
-        <button onclick="spinWheel()" id="spinBtn">SPIN</button>
+        <button onclick="spinWheel()" id="spinBtn">SPIN WHEEL</button>
     </div>
 
     <div id="modal" class="modal">
         <div class="modal-content">
-            <h2>Success?</h2>
+            <h2 id="modal-team-name">Points?</h2>
             <button onclick="recordScore(100)" style="background:var(--spotify-green)">YES (100)</button>
             <button onclick="recordScore(25)" style="background:#f1c40f; color:black;">OTHER (25)</button>
             <button onclick="recordScore(0)" style="background:#e74c3c">NO (0)</button>
@@ -163,48 +166,79 @@
     </div>
 
     <script>
-        const categories = ["80s Rock", "Pop Divas", "Disney Hits", "Country", "90s Hip Hop", "Movie Themes"];
-        const sliceColors = ['#1DB954', '#191414', '#535353', '#b3b3b3', '#2d2d2d'];
+        // Setup Categories
+        const categories = [
+            "1950s/60s/70s", 
+            "1980s", 
+            "1990s", 
+            "2000s", 
+            "2010s", 
+            "2020s", 
+            "Nancy’s Playlist"
+        ];
+        
+        // 7 Distinct Colors
+        const sliceColors = [
+            '#e6194B', // Red
+            '#3cb44b', // Green
+            '#ffe119', // Yellow
+            '#4363d8', // Blue
+            '#f58231', // Orange
+            '#911eb4', // Purple
+            '#42d4f4'  // Cyan
+        ];
 
+        let team1Name = "Team 1", team2Name = "Team 2";
         let currentTeam = 1, score1 = 0, score2 = 0, countdownInterval, currentRotation = 0;
+        
         const canvas = document.getElementById('wheel-canvas'), ctx = canvas.getContext('2d');
-        const centerX = 250, centerY = 250, radius = 250;
+        const centerX = 300, centerY = 300, radius = 290;
+
+        // Ask for names when site opens
+        window.onload = function() {
+            const n1 = prompt("Enter Name for Team 1:", "Team 1");
+            const n2 = prompt("Enter Name for Team 2:", "Team 2");
+            if(n1) { team1Name = n1; document.getElementById('t1-name').innerText = n1; }
+            if(n2) { team2Name = n2; document.getElementById('t2-name').innerText = n2; }
+            drawWheel();
+        }
 
         function drawWheel() {
             const numSlices = categories.length, sliceAngle = (2 * Math.PI) / numSlices;
-            ctx.clearRect(0, 0, 500, 500);
+            ctx.clearRect(0, 0, 600, 600);
             for (let i = 0; i < numSlices; i++) {
                 ctx.beginPath(); ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, i * sliceAngle, (i+1) * sliceAngle);
-                ctx.fillStyle = sliceColors[i % sliceColors.length]; ctx.fill();
+                ctx.fillStyle = sliceColors[i]; ctx.fill();
                 ctx.save(); ctx.translate(centerX, centerY); ctx.rotate(i * sliceAngle + sliceAngle / 2);
-                ctx.textAlign = "right"; ctx.fillStyle = (ctx.fillStyle === '#1db954') ? "black" : "white";
-                ctx.font = "bold 30px sans-serif"; ctx.fillText(categories[i], radius - 30, 10); ctx.restore();
+                ctx.textAlign = "right"; ctx.fillStyle = (i === 2) ? "black" : "white"; // Black text for yellow slice
+                ctx.font = "bold 38px sans-serif"; ctx.fillText(categories[i], radius - 40, 10); ctx.restore();
             }
         }
 
         function spinWheel() {
-            const btn = document.getElementById('spinBtn');
-            btn.disabled = true;
+            document.getElementById('spinBtn').disabled = true;
             const numSlices = categories.length;
             const prizeIndex = Math.floor(Math.random() * numSlices);
             const stopAngle = 360 - (prizeIndex * (360/numSlices)) - (360/numSlices/2);
             currentRotation += (360 * 5) + stopAngle - (currentRotation % 360);
             canvas.style.transform = `rotate(${currentRotation}deg)`;
             setTimeout(() => {
-                document.getElementById('display').innerHTML = `<strong>${categories[prizeIndex]}</strong>`;
+                document.getElementById('display').innerText = categories[prizeIndex];
                 startTimer();
             }, 4000); 
         }
 
         function startTimer() {
             let time = 120;
+            document.getElementById('timer').style.color = "var(--spotify-green)";
             countdownInterval = setInterval(() => {
                 time--;
                 let m = Math.floor(time/60), s = time%60;
                 document.getElementById('timer').innerText = `0${m}:${s<10?'0':''}${s}`;
                 if (time <= 0) {
                     clearInterval(countdownInterval);
+                    document.getElementById('modal-team-name').innerText = `Did ${(currentTeam==1?team1Name:team2Name)} Sing?`;
                     document.getElementById('modal').style.display = "flex";
                 }
             }, 1000);
@@ -213,17 +247,17 @@
         function recordScore(pts) {
             if (currentTeam === 1) {
                 score1 += pts; document.getElementById('s1').innerText = score1; currentTeam = 2;
-                document.getElementById('t1').classList.remove('active-team'); document.getElementById('t2').classList.add('active-team');
+                document.getElementById('t1-box').classList.remove('active-team'); document.getElementById('t2-box').classList.add('active-team');
             } else {
                 score2 += pts; document.getElementById('s2').innerText = score2; currentTeam = 1;
-                document.getElementById('t2').classList.remove('active-team'); document.getElementById('t1').classList.add('active-team');
+                document.getElementById('t2-box').classList.remove('active-team'); document.getElementById('t1-box').classList.add('active-team');
             }
             document.getElementById('modal').style.display = "none";
             document.getElementById('timer').innerText = "02:00";
-            document.getElementById('display').innerText = "Next turn!";
+            document.getElementById('timer').style.color = "white";
+            document.getElementById('display').innerText = `${(currentTeam==1?team1Name:team2Name)}, Spin!`;
             document.getElementById('spinBtn').disabled = false;
         }
-        drawWheel();
     </script>
 </body>
 </html>
