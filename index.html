@@ -27,7 +27,7 @@
             overflow: hidden;
         }
 
-        /* --- INTRO ANIMATION (TWO LINES) --- */
+        /* --- INTRO ANIMATION --- */
         #intro-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; z-index: 1000; display: flex; flex-direction: column;
@@ -48,15 +48,25 @@
         
         .score-board {
             display: flex; justify-content: space-around; background: var(--spotify-dark);
-            padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #444;
+            padding: 10px; border-radius: 12px; margin-bottom: 5px; border: 1px solid #444;
         }
         .score-display { flex: 1; transition: all 0.3s; }
         .active-team { border-bottom: 3px solid var(--spotify-green); background: rgba(29, 185, 84, 0.1); }
         .score-num { font-size: 1.4em; color: var(--spotify-green); font-weight: 800; display: block;}
 
-        .controls-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
+        .controls-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 5px; }
         #timer { font-size: 42px; font-weight: 800; background: #333; padding: 8px 15px; border-radius: 12px; min-width: 120px; }
         
+        /* NEW SELECTION DISPLAY STYLE */
+        #selection-display {
+            font-size: 1.5em;
+            font-weight: 900;
+            color: var(--spotify-green);
+            margin: 10px 0;
+            text-transform: uppercase;
+            min-height: 1.6em; /* Keeps space even when empty */
+        }
+
         #wheel-area { flex-grow: 1; display: none; justify-content: center; align-items: center; position: relative; }
         #wheel-container { position: relative; width: 75vw; height: 75vw; max-width: 300px; max-height: 300px; }
         #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; border: 4px solid white; transition: transform 4s cubic-bezier(0.1, 0.7, 0.2, 1); }
@@ -103,6 +113,8 @@
             <button onclick="spinWheel()" id="spinBtn" class="btn-main" style="background:var(--spotify-green); color:white;">SPIN</button>
             <button onclick="earlyStop()" id="stopBtn" class="btn-main" style="background:#e74c3c; color:white; display:none;">STOP</button>
         </div>
+
+        <div id="selection-display"></div>
 
         <div id="wheel-area">
             <div id="wheel-container">
@@ -179,6 +191,7 @@
         }
 
         function showChoiceModal() {
+            document.getElementById('selection-display').innerText = ""; // Clear display for new round
             document.getElementById('choice-team-name').innerText = `${currentTeam === 1 ? team1Name : team2Name}: Ready?`;
             document.getElementById('choiceModal').style.display = 'flex';
             document.getElementById('wheel-area').style.display = 'none';
@@ -186,8 +199,21 @@
             document.getElementById('stopBtn').style.display = 'none';
         }
 
-        function startSpinMode() { currentMode = 'spin'; document.getElementById('choiceModal').style.display = 'none'; document.getElementById('wheel-area').style.display = 'flex'; drawWheel(); }
-        function startGuessMode() { currentMode = 'guess'; document.getElementById('choiceModal').style.display = 'none'; document.getElementById('wheel-area').style.display = 'flex'; drawWheel(); }
+        function startSpinMode() { 
+            currentMode = 'spin'; 
+            document.getElementById('selection-display').innerText = "LET’S KARAOKE";
+            document.getElementById('choiceModal').style.display = 'none'; 
+            document.getElementById('wheel-area').style.display = 'flex'; 
+            drawWheel(); 
+        }
+
+        function startGuessMode() { 
+            currentMode = 'guess'; 
+            document.getElementById('selection-display').innerText = "NAME THAT SONG/ARTIST";
+            document.getElementById('choiceModal').style.display = 'none'; 
+            document.getElementById('wheel-area').style.display = 'flex'; 
+            drawWheel(); 
+        }
 
         function drawWheel() {
             const numSlices = categories.length, sliceAngle = (2 * Math.PI) / numSlices;
