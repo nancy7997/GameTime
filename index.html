@@ -60,6 +60,8 @@
         #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; border: 4px solid white; transition: transform 4s cubic-bezier(0.1, 0.7, 0.2, 1); }
         #pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 35px solid white; z-index: 10; }
 
+        .btn-main { padding:15px 30px; border-radius:12px; border:none; font-weight:900; cursor: pointer; text-transform: uppercase; }
+
         /* --- MODALS --- */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -71,7 +73,6 @@
         /* --- WINNER SCREEN --- */
         #winner-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 2000; flex-direction: column; justify-content: center; align-items: center; }
         #winner-name { font-size: 4em; color: var(--spotify-green); font-weight: 900; text-align: center; }
-        canvas#confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2001; }
     </style>
 </head>
 <body>
@@ -96,7 +97,8 @@
 
         <div class="controls-row">
             <div id="timer">02:00</div>
-            <button onclick="spinWheel()" id="spinBtn" style="background:var(--spotify-green); color:white; padding:15px 30px; border-radius:12px; border:none; font-weight:900;">SPIN</button>
+            <button onclick="spinWheel()" id="spinBtn" class="btn-main" style="background:var(--spotify-green); color:white;">SPIN</button>
+            <button onclick="earlyStop()" id="stopBtn" class="btn-main" style="background:#e74c3c; color:white; display:none;">STOP</button>
         </div>
 
         <div id="wheel-area">
@@ -112,13 +114,13 @@
             <h2 id="choice-team-name">Team Name Ready!</h2>
             <p>Pick your challenge:</p>
             <button onclick="startSpinMode()" style="background:var(--spotify-green); color:white;">SPIN THE WHEEL</button>
-            <button onclick="startGuessMode()" style="background:#3498db; color:white;">GUESS SONG & ARTIST</button>
+            <button onclick="startGuessMode()" style="background:#3498db; color:white;">NAME SONG & ARTIST</button>
         </div>
     </div>
 
     <div id="spinScoreModal" class="modal">
         <div class="modal-content">
-            <h2>Did the team sing?</h2>
+            <h2 style="color:white;">Did the team sing?</h2>
             <button onclick="recordScore(100)" style="background:var(--spotify-green); color:white;">YES (100)</button>
             <button onclick="recordScore(25)" style="background:#f1c40f; color:black;">OTHER (25)</button>
             <button onclick="recordScore(0)" style="background:#e74c3c; color:white;">NO (0)</button>
@@ -127,7 +129,7 @@
 
     <div id="guessScoreModal" class="modal">
         <div class="modal-content">
-            <h2>What did they guess?</h2>
+            <h2 style="color:white;">What did they guess?</h2>
             <button onclick="recordScore(50)" style="background:var(--spotify-green); color:white;">BOTH (50)</button>
             <button onclick="recordScore(15)" style="background:#3498db; color:white;">ARTIST ONLY (15)</button>
             <button onclick="recordScore(10)" style="background:#9b59b6; color:white;">SONG ONLY (10)</button>
@@ -138,7 +140,6 @@
     <div id="winner-screen">
         <div style="color: white; font-size: 1.5em; margin-bottom: 20px;">CHAMPIONS</div>
         <div id="winner-name">TEAM NAME</div>
-        <canvas id="confetti"></canvas>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -150,7 +151,6 @@
         
         const canvas = document.getElementById('wheel-canvas'), ctx = canvas.getContext('2d');
 
-        // --- 1. INTRO ANIMATION ---
         window.onload = function() {
             const text = "KARAOKE ROULETTE";
             const container = document.getElementById('balloon-text');
@@ -163,7 +163,6 @@
                 span.style.animationDelay = (i * 0.1) + 's';
                 container.appendChild(span);
             });
-
             setTimeout(() => {
                 document.getElementById('intro-overlay').style.opacity = '0';
                 setTimeout(() => {
@@ -173,7 +172,6 @@
             }, 3500);
         };
 
-        // --- 2. SETUP ---
         function setupTeams() {
             team1Name = prompt("Enter Team 1 Name:", "Team 1") || "Team 1";
             team2Name = prompt("Enter Team 2 Name:", "Team 2") || "Team 2";
@@ -189,19 +187,12 @@
             document.getElementById('choice-team-name').innerText = `${team}: Ready?`;
             document.getElementById('choiceModal').style.display = 'flex';
             document.getElementById('wheel-area').style.display = 'none';
+            document.getElementById('spinBtn').style.display = 'inline-block';
+            document.getElementById('stopBtn').style.display = 'none';
         }
 
-        function startSpinMode() {
-            currentMode = 'spin';
-            document.getElementById('choiceModal').style.display = 'none';
-            document.getElementById('wheel-area').style.display = 'flex';
-        }
-
-        function startGuessMode() {
-            currentMode = 'guess';
-            document.getElementById('choiceModal').style.display = 'none';
-            document.getElementById('wheel-area').style.display = 'flex';
-        }
+        function startSpinMode() { currentMode = 'spin'; document.getElementById('choiceModal').style.display = 'none'; document.getElementById('wheel-area').style.display = 'flex'; }
+        function startGuessMode() { currentMode = 'guess'; document.getElementById('choiceModal').style.display = 'none'; document.getElementById('wheel-area').style.display = 'flex'; }
 
         function drawWheel() {
             const numSlices = categories.length, sliceAngle = (2 * Math.PI) / numSlices;
@@ -211,7 +202,9 @@
                 ctx.arc(300, 300, 290, i * sliceAngle, (i+1) * sliceAngle);
                 ctx.fillStyle = sliceColors[i]; ctx.fill();
                 ctx.save(); ctx.translate(300, 300); ctx.rotate(i * sliceAngle + sliceAngle / 2);
-                ctx.textAlign = "right"; ctx.fillStyle = "white"; ctx.font = "bold 32px sans-serif";
+                ctx.textAlign = "right"; 
+                ctx.fillStyle = "black"; // Changed font color to black
+                ctx.font = "bold 32px sans-serif";
                 let text = categories[i];
                 if (text.includes(" - ")) {
                     let parts = text.split(" - ");
@@ -225,13 +218,19 @@
         }
 
         function spinWheel() {
-            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('spinBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'inline-block';
+            document.getElementById('stopBtn').disabled = true; // Disabled while wheel is moving
+            
             const prizeIndex = Math.floor(Math.random() * categories.length);
             const degreePerSlice = 360 / categories.length;
             const stopAngle = 360 - (prizeIndex * degreePerSlice) - (degreePerSlice / 2);
             currentRotation += (360 * 5) + stopAngle - (currentRotation % 360);
             canvas.style.transform = `rotate(${currentRotation}deg)`;
-            setTimeout(() => { startTimer(); }, 4000); 
+            setTimeout(() => { 
+                document.getElementById('stopBtn').disabled = false;
+                startTimer(); 
+            }, 4000); 
         }
 
         function startTimer() {
@@ -241,12 +240,19 @@
                 time--;
                 let m = Math.floor(time/60), s = time%60;
                 document.getElementById('timer').innerText = `0${m}:${s<10?'0':''}${s}`;
-                if (time <= 0) {
-                    clearInterval(countdownInterval);
-                    if(currentMode === 'spin') document.getElementById('spinScoreModal').style.display = 'flex';
-                    else document.getElementById('guessScoreModal').style.display = 'flex';
-                }
+                if (time <= 0) { triggerPopup(); }
             }, 1000);
+        }
+
+        function earlyStop() {
+            clearInterval(countdownInterval);
+            triggerPopup();
+        }
+
+        function triggerPopup() {
+            clearInterval(countdownInterval);
+            if(currentMode === 'spin') document.getElementById('spinScoreModal').style.display = 'flex';
+            else document.getElementById('guessScoreModal').style.display = 'flex';
         }
 
         function recordScore(pts) {
@@ -257,14 +263,13 @@
             document.getElementById('spinScoreModal').style.display = 'none';
             document.getElementById('guessScoreModal').style.display = 'none';
             document.getElementById('timer').innerText = "02:00";
-            document.getElementById('spinBtn').disabled = false;
             
             document.getElementById('t1-box').classList.toggle('active-team');
             document.getElementById('t2-box').classList.toggle('active-team');
 
-            const round = Math.floor(turnCount / 2) + 1;
             if (turnCount >= 10) { endGame(); } 
             else {
+                const round = Math.floor(turnCount / 2) + 1;
                 document.getElementById('round-indicator').innerText = `Round ${round > 5 ? 5 : round} of 5`;
                 showChoiceModal();
             }
@@ -275,19 +280,14 @@
             document.getElementById('winner-name').innerText = winner;
             document.getElementById('winner-screen').style.display = 'flex';
             
-            const duration = 15 * 1000;
-            const animationEnd = Date.now() + duration;
-            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 3000 };
-
-            const interval = setInterval(function() {
-                const timeLeft = animationEnd - Date.now();
-                if (timeLeft <= 0) return clearInterval(interval);
-                const particleCount = 50 * (timeLeft / duration);
-                confetti({...defaults, particleCount, origin: { x: 0, y: 0 }});
-                confetti({...defaults, particleCount, origin: { x: 1, y: 0 }});
-                confetti({...defaults, particleCount, origin: { x: 0, y: 1 }});
-                confetti({...defaults, particleCount, origin: { x: 1, y: 1 }});
-            }, 250);
+            const end = Date.now() + (15 * 1000);
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0, y: 1 } });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1, y: 1 } });
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0, y: 0 } });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1, y: 0 } });
+                if (Date.now() < end) { requestAnimationFrame(frame); }
+            }());
         }
     </script>
 </body>
