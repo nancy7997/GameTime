@@ -27,16 +27,18 @@
             overflow: hidden;
         }
 
-        /* --- INTRO ANIMATION --- */
+        /* --- INTRO ANIMATION (TWO LINES) --- */
         #intro-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 1000; display: flex; justify-content: center; align-items: center;
+            background: white; z-index: 1000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             transition: opacity 1.5s ease;
         }
-        .balloon-container { display: flex; gap: 10px; }
+        .balloon-row { display: flex; gap: 8px; margin: 10px 0; }
         .balloon {
-            font-size: 50px; font-weight: 900; padding: 20px; border-radius: 50%;
+            font-size: 11vw; font-weight: 900; padding: 15px; border-radius: 50%;
             display: inline-block; animation: bounce 1s infinite alternate;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2);
         }
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-20px); } }
 
@@ -78,7 +80,8 @@
 <body>
 
     <div id="intro-overlay">
-        <div class="balloon-container" id="balloon-text"></div>
+        <div id="balloon-row-1" class="balloon-row"></div>
+        <div id="balloon-row-2" class="balloon-row"></div>
     </div>
 
     <div id="game-content">
@@ -111,16 +114,16 @@
 
     <div id="choiceModal" class="modal">
         <div class="modal-content">
-            <h2 id="choice-team-name">Team Name Ready!</h2>
-            <p>Pick your challenge:</p>
-            <button onclick="startSpinMode()" style="background:var(--spotify-green); color:white;">SPIN THE WHEEL</button>
-            <button onclick="startGuessMode()" style="background:#3498db; color:white;">NAME SONG & ARTIST</button>
+            <h2 id="choice-team-name">Ready?</h2>
+            <p>Select your task for this round:</p>
+            <button onclick="startSpinMode()" style="background:var(--spotify-green); color:white;">LET’S KARAOKE</button>
+            <button onclick="startGuessMode()" style="background:#3498db; color:white;">NAME THAT SONG/ARTIST</button>
         </div>
     </div>
 
     <div id="spinScoreModal" class="modal">
         <div class="modal-content">
-            <h2 style="color:white;">Did the team sing?</h2>
+            <h2 style="color:white;">Did they sing?</h2>
             <button onclick="recordScore(100)" style="background:var(--spotify-green); color:white;">YES (100)</button>
             <button onclick="recordScore(25)" style="background:#f1c40f; color:black;">OTHER (25)</button>
             <button onclick="recordScore(0)" style="background:#e74c3c; color:white;">NO (0)</button>
@@ -138,8 +141,7 @@
     </div>
 
     <div id="winner-screen">
-        <div style="color: white; font-size: 1.5em; margin-bottom: 20px;">CHAMPIONS</div>
-        <div id="winner-name">TEAM NAME</div>
+        <div id="winner-name">WINNER</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -152,47 +154,40 @@
         const canvas = document.getElementById('wheel-canvas'), ctx = canvas.getContext('2d');
 
         window.onload = function() {
-            const text = "KARAOKE ROULETTE";
-            const container = document.getElementById('balloon-text');
-            text.split('').forEach((char, i) => {
-                if(char === ' ') { container.innerHTML += '&nbsp;'; return; }
-                const span = document.createElement('span');
-                span.className = 'balloon';
-                span.innerText = char;
-                span.style.backgroundColor = sliceColors[i % sliceColors.length];
-                span.style.animationDelay = (i * 0.1) + 's';
-                container.appendChild(span);
-            });
-            setTimeout(() => {
-                document.getElementById('intro-overlay').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('intro-overlay').style.display = 'none';
-                    setupTeams();
-                }, 1500);
+            const row1 = "KARAOKE", row2 = "ROULETTE";
+            function createBalloons(text, rowId, offset) {
+                const container = document.getElementById(rowId);
+                text.split('').forEach((char, i) => {
+                    const span = document.createElement('span'); span.className = 'balloon'; span.innerText = char;
+                    span.style.backgroundColor = sliceColors[(i + offset) % sliceColors.length];
+                    span.style.animationDelay = (i * 0.1) + 's'; container.appendChild(span);
+                });
+            }
+            createBalloons(row1, 'balloon-row-1', 0); createBalloons(row2, 'balloon-row-2', 3);
+            setTimeout(() => { document.getElementById('intro-overlay').style.opacity = '0';
+                setTimeout(() => { document.getElementById('intro-overlay').style.display = 'none'; setupTeams(); }, 1500);
             }, 3500);
         };
 
         function setupTeams() {
-            team1Name = prompt("Enter Team 1 Name:", "Team 1") || "Team 1";
-            team2Name = prompt("Enter Team 2 Name:", "Team 2") || "Team 2";
+            team1Name = prompt("Team 1 Name:", "Team 1") || "Team 1";
+            team2Name = prompt("Team 2 Name:", "Team 2") || "Team 2";
             document.getElementById('t1-name').innerText = team1Name;
             document.getElementById('t2-name').innerText = team2Name;
             document.getElementById('game-content').style.display = 'flex';
-            drawWheel();
-            showChoiceModal();
+            drawWheel(); showChoiceModal();
         }
 
         function showChoiceModal() {
-            const team = currentTeam === 1 ? team1Name : team2Name;
-            document.getElementById('choice-team-name').innerText = `${team}: Ready?`;
+            document.getElementById('choice-team-name').innerText = `${currentTeam === 1 ? team1Name : team2Name}: Ready?`;
             document.getElementById('choiceModal').style.display = 'flex';
             document.getElementById('wheel-area').style.display = 'none';
             document.getElementById('spinBtn').style.display = 'inline-block';
             document.getElementById('stopBtn').style.display = 'none';
         }
 
-        function startSpinMode() { currentMode = 'spin'; document.getElementById('choiceModal').style.display = 'none'; document.getElementById('wheel-area').style.display = 'flex'; }
-        function startGuessMode() { currentMode = 'guess'; document.getElementById('choiceModal').style.display = 'none'; document.getElementById('wheel-area').style.display = 'flex'; }
+        function startSpinMode() { currentMode = 'spin'; document.getElementById('choiceModal').style.display = 'none'; document.getElementById('wheel-area').style.display = 'flex'; drawWheel(); }
+        function startGuessMode() { currentMode = 'guess'; document.getElementById('choiceModal').style.display = 'none'; document.getElementById('wheel-area').style.display = 'flex'; drawWheel(); }
 
         function drawWheel() {
             const numSlices = categories.length, sliceAngle = (2 * Math.PI) / numSlices;
@@ -202,16 +197,12 @@
                 ctx.arc(300, 300, 290, i * sliceAngle, (i+1) * sliceAngle);
                 ctx.fillStyle = sliceColors[i]; ctx.fill();
                 ctx.save(); ctx.translate(300, 300); ctx.rotate(i * sliceAngle + sliceAngle / 2);
-                ctx.textAlign = "right"; 
-                ctx.fillStyle = "black"; // Changed font color to black
-                ctx.font = "bold 32px sans-serif";
+                ctx.textAlign = "right"; ctx.fillStyle = "black"; ctx.font = "bold 32px sans-serif";
                 let text = categories[i];
                 if (text.includes(" - ")) {
-                    let parts = text.split(" - ");
-                    ctx.fillText(parts[0] + " -", 250, -10); ctx.fillText(parts[1], 250, 35);
+                    let p = text.split(" - "); ctx.fillText(p[0] + " -", 250, -10); ctx.fillText(p[1], 250, 35);
                 } else if (text.includes(" ")) {
-                    let parts = text.split(" ");
-                    ctx.fillText(parts[0], 250, -10); ctx.fillText(parts[1], 250, 35);
+                    let p = text.split(" "); ctx.fillText(p[0], 250, -10); ctx.fillText(p[1], 250, 35);
                 } else { ctx.fillText(text, 250, 10); }
                 ctx.restore();
             }
@@ -220,17 +211,13 @@
         function spinWheel() {
             document.getElementById('spinBtn').style.display = 'none';
             document.getElementById('stopBtn').style.display = 'inline-block';
-            document.getElementById('stopBtn').disabled = true; // Disabled while wheel is moving
-            
+            document.getElementById('stopBtn').disabled = true;
             const prizeIndex = Math.floor(Math.random() * categories.length);
             const degreePerSlice = 360 / categories.length;
             const stopAngle = 360 - (prizeIndex * degreePerSlice) - (degreePerSlice / 2);
             currentRotation += (360 * 5) + stopAngle - (currentRotation % 360);
             canvas.style.transform = `rotate(${currentRotation}deg)`;
-            setTimeout(() => { 
-                document.getElementById('stopBtn').disabled = false;
-                startTimer(); 
-            }, 4000); 
+            setTimeout(() => { document.getElementById('stopBtn').disabled = false; startTimer(); }, 4000); 
         }
 
         function startTimer() {
@@ -244,10 +231,7 @@
             }, 1000);
         }
 
-        function earlyStop() {
-            clearInterval(countdownInterval);
-            triggerPopup();
-        }
+        function earlyStop() { triggerPopup(); }
 
         function triggerPopup() {
             clearInterval(countdownInterval);
@@ -258,35 +242,27 @@
         function recordScore(pts) {
             if (currentTeam === 1) { score1 += pts; document.getElementById('s1').innerText = score1; currentTeam = 2; }
             else { score2 += pts; document.getElementById('s2').innerText = score2; currentTeam = 1; }
-            
             turnCount++;
-            document.getElementById('spinScoreModal').style.display = 'none';
-            document.getElementById('guessScoreModal').style.display = 'none';
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
             document.getElementById('timer').innerText = "02:00";
-            
             document.getElementById('t1-box').classList.toggle('active-team');
             document.getElementById('t2-box').classList.toggle('active-team');
-
-            if (turnCount >= 10) { endGame(); } 
+            if (turnCount >= 10) endGame();
             else {
-                const round = Math.floor(turnCount / 2) + 1;
-                document.getElementById('round-indicator').innerText = `Round ${round > 5 ? 5 : round} of 5`;
+                document.getElementById('round-indicator').innerText = `Round ${Math.floor(turnCount/2)+1} of 5`;
                 showChoiceModal();
             }
         }
 
         function endGame() {
-            const winner = score1 > score2 ? team1Name : (score2 > score1 ? team2Name : "It's a Tie!");
+            const winner = score1 > score2 ? team1Name : (score2 > score1 ? team2Name : "TIE!");
             document.getElementById('winner-name').innerText = winner;
             document.getElementById('winner-screen').style.display = 'flex';
-            
-            const end = Date.now() + (15 * 1000);
+            const end = Date.now() + 15000;
             (function frame() {
                 confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0, y: 1 } });
                 confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1, y: 1 } });
-                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0, y: 0 } });
-                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1, y: 0 } });
-                if (Date.now() < end) { requestAnimationFrame(frame); }
+                if (Date.now() < end) requestAnimationFrame(frame);
             }());
         }
     </script>
