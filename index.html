@@ -27,7 +27,7 @@
             overflow: hidden;
         }
 
-        /* --- INTRO ANIMATION --- */
+        /* --- INTRO ANIMATION (TWO LINES) --- */
         #intro-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; z-index: 1000; display: flex; flex-direction: column;
@@ -57,14 +57,18 @@
         .controls-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 5px; }
         #timer { font-size: 42px; font-weight: 800; background: #333; padding: 8px 15px; border-radius: 12px; min-width: 120px; }
         
-        /* NEW SELECTION DISPLAY STYLE */
-        #selection-display {
-            font-size: 1.5em;
+        /* BOLD SELECTION DISPLAY */
+        #selection-banner {
+            font-size: 1.8em;
             font-weight: 900;
-            color: var(--spotify-green);
+            color: #FFFFFF;
+            background: rgba(29, 185, 84, 0.2);
+            padding: 5px 0;
             margin: 10px 0;
             text-transform: uppercase;
-            min-height: 1.6em; /* Keeps space even when empty */
+            border-top: 1px solid #444;
+            border-bottom: 1px solid #444;
+            min-height: 1.2em;
         }
 
         #wheel-area { flex-grow: 1; display: none; justify-content: center; align-items: center; position: relative; }
@@ -114,7 +118,7 @@
             <button onclick="earlyStop()" id="stopBtn" class="btn-main" style="background:#e74c3c; color:white; display:none;">STOP</button>
         </div>
 
-        <div id="selection-display"></div>
+        <div id="selection-banner"></div>
 
         <div id="wheel-area">
             <div id="wheel-container">
@@ -191,7 +195,7 @@
         }
 
         function showChoiceModal() {
-            document.getElementById('selection-display').innerText = ""; // Clear display for new round
+            document.getElementById('selection-banner').innerText = ""; 
             document.getElementById('choice-team-name').innerText = `${currentTeam === 1 ? team1Name : team2Name}: Ready?`;
             document.getElementById('choiceModal').style.display = 'flex';
             document.getElementById('wheel-area').style.display = 'none';
@@ -201,7 +205,7 @@
 
         function startSpinMode() { 
             currentMode = 'spin'; 
-            document.getElementById('selection-display').innerText = "LET’S KARAOKE";
+            document.getElementById('selection-banner').innerText = "LET’S KARAOKE";
             document.getElementById('choiceModal').style.display = 'none'; 
             document.getElementById('wheel-area').style.display = 'flex'; 
             drawWheel(); 
@@ -209,7 +213,7 @@
 
         function startGuessMode() { 
             currentMode = 'guess'; 
-            document.getElementById('selection-display').innerText = "NAME THAT SONG/ARTIST";
+            document.getElementById('selection-banner').innerText = "NAME THAT SONG/ARTIST";
             document.getElementById('choiceModal').style.display = 'none'; 
             document.getElementById('wheel-area').style.display = 'flex'; 
             drawWheel(); 
